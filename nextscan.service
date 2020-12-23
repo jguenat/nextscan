@@ -1,0 +1,12 @@
+[Unit]
+Description=Trigger nextcloud scan when local samba share is modified
+After=network.target
+RequiresMountsFor=$PATH_TO_SMB_SHARE_IF_MOUNTED_AT_BOOT
+
+[Service]
+User=$USER_WITH_ACCESS_TO_SMB_AND_DOCKER
+
+ExecStart=&PATH_TO_SCRIPT
+
+[Install]
+WantedBy=multi-user.target
