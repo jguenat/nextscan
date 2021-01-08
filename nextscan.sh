@@ -9,7 +9,7 @@ fullscan=120
 fullscandt=86400
 
 monitor_changes(){
-        while read FILE; do
+        while read -r FILE; do
                 echo "${FILE}" >> "${modifications}"
         done <  <(inotifywait -rmq --format '%w' "${local_external_share}" --exclude "${exclude}" -e create,delete,modify,moved_to,moved_from)
 }
@@ -17,10 +17,9 @@ monitor_changes(){
 nextcloudusers=()
 get_nextcloud_users(){
         nextcloudusers=()
-        rawusers=$(docker exec -i -u www-data nextcloud php occ user:list)
         external_storage=$(docker exec -i -u www-data nextcloud php occ files_external:list)
-        while read line; do
-                user=$(echo ${line} | cut -d " " -f2 | tr -dc '[:alnum:]\n')
+        while read -r line; do
+                user=$(echo "${line}" | cut -d " " -f2 | tr -dc '[:alnum:]\n')
                 if [[ ${external_storage} =~ ${user} ]]; then
                         nextcloudusers+=("${user}")
                 fi
@@ -36,7 +35,7 @@ get_userstoscan(){
 
         for nextclouduser in "${nextcloudusers[@]}"
         do
-                if [[ "${systemusers[@],,}" =~ ${nextclouduser,,} ]]; then
+                if [[ "${systemusers[*],,}" =~ ${nextclouduser,,} ]]; then
                         userstoscan+=("${nextclouduser}")
                 fi
         done
@@ -45,13 +44,13 @@ get_userstoscan(){
 parsed_mod=()
 parse_modifications() {
         mv ${modifications} ${mod_to_process}
-        mapfile -t parsed_mod < <(cat ${mod_to_process} | sort -u)
+        mapfile -t parsed_mod < <(sort -u < ${mod_to_process})
 }
 
 do_periodic_fullscan(){
         echo "$(date) Periodic Fullscan"
         docker exec -i -u www-data nextcloud php occ files:scan --all
-        ((fullscan=SECONDS+$fullscandt))
+        ((fullscan=SECONDS+fullscandt))
 }
 
 do_delayed_fullscan(){
