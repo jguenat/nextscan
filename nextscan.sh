@@ -71,6 +71,7 @@ do_scan(){
 }
 
 main(){
+        sleep 60
         monitor_changes &
         get_nextcloud_users
         echo "${nextcloudusers[@]}"
